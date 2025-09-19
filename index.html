@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>El Estudio de Juegos del Futuro: Diseñador Inclusivo</title>
+  <!--
+    ✨ IMPLEMENTACIÓN PEDIDA (LEER ANTES DE EDITAR) ✨
+    - Un solo archivo HTML con <style> y <script> internos. Sin frameworks ni librerías externas.
+    - Estados de la app: inicio → briefing → decisiones → testeo → resultado.
+    - Público objetivo: 3° de primaria (ES-MX). UI con texto mínimo, iconos grandes y voz en off.
+    - Accesibilidad activada por defecto: Voz en off, Subtítulos, Alto contraste (toggleables). Modo daltonismo opcional.
+    - Controles de teclado: 1=Avatares, 2=Música, 3=Niveles; A=Carpeta A, B=Carpeta B; T=Testear; R=Rehacer; Enter=Continuar.
+    - Gráficos sólo con CSS/SVG. Sin imágenes externas. Áreas táctiles ≥ 64 px.
+    - Música y SFX generados con Web Audio API. Volumen/energía de música sube con Inclusión.
+
+    🧑‍🏫 SUGERENCIAS PARA DOCENTES (EDITABLE):
+    - Cambie los textos de voz en la sección VOZ & SUBTÍTULOS del script.
+    - Ajuste la lógica de puntuación en la sección LÓGICA DE PUNTUACIÓN.
+    - Active el "Modo Presupuesto (beta)" descomentando la sección correspondiente.
+  -->
+  <style>
+    :root{
+      --bg:#0f172a;           /* azul noche */
+      --panel:#111827;        /* gris grafito */
+      --txt:#e5e7eb;          /* gris claro */
+      --acc1:#22c55e;         /* verde */
+      --acc2:#06b6d4;         /* cian */
+      --warn:#f59e0b;         /* ámbar */
+      --err:#ef4444;          /* rojo */
+      --muted:#94a3b8;        /* gris */
+      --vio:#8b5cf6;          /* violeta */
+      --pink:#ec4899;         /* rosa */
+      --card:#1f2937;         /* azul grisáceo */
+      --good:#16a34a;         /* verde bueno */
+      --mid:#fbbf24;          /* amarillo */
+      --bad:#dc2626;          /* rojo malo */
+    }
+
+    /* Alto contraste por defecto (puedes apagar con el toggle) */
+    body.high-contrast{ --txt:#ffffff; --bg:#000000; --panel:#000000; --card:#000000; --muted:#d1d5db; }
+
+    /* Modo daltonismo: usa tonos amigables + patrones (rayas) en barras */
+    body.colorblind .striped{ background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.2) 0, rgba(255,255,255,.2) 10px, transparent 10px, transparent 20px); }
+    body.colorblind{ --acc1:#0ea5e9; --acc2:#fb923c; --good:#0ea5e9; --mid:#a3e635; --bad:#f97316; }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      background: radial-gradient(circle at 20% -10%, #1e293b, transparent 30%),
+                  radial-gradient(circle at 120% 20%, #0b1320, transparent 40%), var(--bg);
+      color:var(--txt); overflow:hidden;
+    }
+    .app{ display:flex; flex-direction:column; height:100%; }
+
+    /* Barra superior con toggles */
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:rgba(0,0,0,.3);
+      border-bottom:1px solid rgba(255,255,255,.06); backdrop-filter: blur(8px);
+    }
+    .brand{ display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.3px; }
+    .brand .logo{ width:40px; height:40px; border-radius:12px; background: conic-gradient(from 0deg, var(--acc2), var(--vio), var(--pink), var(--acc2)); box-shadow:0 0 24px rgba(99,102,241,.35) inset; position:relative; }
+    .brand .logo::after{ content:""; position:absolute; inset:8px; border-radius:50%; background:radial-gradient(circle, #fff8 0 30%, transparent 60%); }
+
+    .toggles{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .toggle{
+      display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid rgba(255,255,255,.08);
+      padding:8px 10px; border-radius:14px; cursor:pointer; user-select:none; min-height:48px; min-width:64px;
+      transition:.2s transform, .2s background;
+    }
+    .toggle:hover{ transform: translateY(-1px); }
+    .toggle input{ appearance:none; width:36px; height:22px; background:#111827; border-radius:999px; position:relative; outline:none; border:1px solid #374151; }
+    .toggle input:checked{ background:linear-gradient(90deg, var(--acc2), var(--acc1)); border-color:transparent; }
+    .toggle input::after{ content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; background:#fff; border-radius:50%; transition:.2s left; }
+    .toggle input:checked::after{ left:16px; }
+    .ico{ font-size:20px; }
+
+    /* Pantallas */
+    .screen{ flex:1; display:none; padding:16px; }
+    .screen.active{ display:flex; }
+
+    /* INICIO */
+    .start{
+      align-items:center; justify-content:center; position:relative;
+    }
+    .start .center{
+      max-width:980px; width:100%; background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08); border-radius:24px; padding:24px; text-align:center; box-shadow:0 12px 40px rgba(0,0,0,.3);
+    }
+    h1.title{ font-size: clamp(26px, 4vw, 42px); margin:8px 0 12px; line-height:1.1; }
+    .subtitle{ opacity:.85; font-size:clamp(14px,2vw,18px); }
+    .btns{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
+    .btn{ border:none; border-radius:16px; padding:16px 20px; font-weight:700; cursor:pointer; min-width:180px; min-height:64px; font-size:18px;
+          background:linear-gradient(90deg, var(--vio), var(--acc2)); color:#fff; box-shadow:0 8px 24px rgba(0,0,0,.25); transition: transform .12s ease; }
+    .btn:active{ transform: translateY(2px); }
+    .btn.secondary{ background:linear-gradient(90deg, #374151, #1f2937); }
+
+    /* Modal Cómo se juega */
+    .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.55); padding:20px; }
+    .modal.active{ display:flex; }
+    .modal .card{ background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:20px; width:min(840px, 100%); padding:16px; }
+    .slides{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:center; }
+    .slide-ill{
+      min-height:220px; border-radius:16px; background:radial-gradient(circle at 30% 30%, #1f324f, #101826); display:flex; align-items:center; justify-content:center; position:relative;
+      overflow:hidden; border:1px solid rgba(255,255,255,.06);
+    }
+    .slide-ill svg{ width:75%; height:auto; }
+    .slide-text{ font-size:20px; text-align:center; font-weight:700; }
+    .modal .controls{ display:flex; justify-content:space-between; padding-top:12px; }
+
+    /* BRIEFING */
+    .briefing{ align-items:center; justify-content:center; position:relative; }
+    .stage{
+      display:grid; grid-template-columns: 1.2fr 1fr; gap:16px; width:min(1100px, 100%);
+    }
+    .stage .panel{ background:var(--panel); border:1px solid rgba(255,255,255,.06); border-radius:20px; padding:16px; }
+    .chars{ display:flex; gap:12px; align-items:center; justify-content:space-around; }
+    .char{ width:220px; height:220px; background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:24px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+    .char .name{ position:absolute; bottom:8px; left:0; right:0; text-align:center; font-weight:800; }
+    .exec{ --c:#22c55e; }
+    .genia{ --c:#8b5cf6; }
+    .brain{ width:140px; height:140px; border-radius:50%; background:radial-gradient(circle at 40% 40%, #fff6, transparent 60%), conic-gradient(from var(--a,0deg), var(--c), #22d3ee, #f472b6, var(--c)); box-shadow:0 0 22px #fff8 inset, 0 0 32px var(--c); animation:spin 6s linear infinite; }
+    @keyframes spin{ to{ --a:360deg; } }
+
+    .demo{ min-height:240px; display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .folder{ background:linear-gradient(180deg, #0b1220, #141b2b); border:2px dashed rgba(255,255,255,.1); border-radius:18px; padding:12px; position:relative; }
+    .folder .tab{ position:absolute; top:-10px; left:12px; width:86px; height:22px; background:var(--vio); border-radius:10px 10px 0 0; box-shadow:0 6px 14px rgba(0,0,0,.2); }
+    .folder .item{ width:56px; height:56px; border-radius:12px; background:#2b3550; display:inline-flex; align-items:center; justify-content:center; margin:4px; font-size:28px; }
+    .gameout{ background:linear-gradient(180deg, #141b2b, #0b1220); border-radius:18px; padding:12px; border:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; gap:10px; }
+    .pill{ background:rgba(255,255,255,.06); padding:6px 10px; border-radius:999px; font-weight:700; }
+
+    /* DISEÑO (MESA) */
+    .desk{ display:grid; grid-template-columns: 1.1fr .9fr; gap:14px; width:min(1280px,100%); margin:0 auto; }
+    .picker{ background:var(--panel); border:1px solid rgba(255,255,255,.06); border-radius:20px; padding:14px; }
+    .group-title{ font-weight:900; font-size:22px; display:flex; align-items:center; justify-content:space-between; }
+    .cards{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:10px; }
+    .card-btn{ border:2px solid transparent; background:var(--card); border-radius:20px; padding:12px; min-height:160px; cursor:pointer; position:relative; outline:none; }
+    .card-btn .label{ position:absolute; top:10px; right:10px; font-weight:900; background:rgba(255,255,255,.08); padding:4px 10px; border-radius:999px; }
+    .card-btn.selected{ border-color:var(--acc2); box-shadow:0 0 0 3px rgba(6,182,212,.25); }
+    .folder-icon{ width:72px; height:56px; border-radius:10px; background:linear-gradient(180deg, #1a2440, #111827); border:1px solid rgba(255,255,255,.08); position:relative; margin-bottom:8px; }
+    .folder-icon::before{ content:""; position:absolute; top:-8px; left:8px; width:36px; height:14px; border-radius:6px 6px 0 0; background:var(--vio); }
+    .option-text{ font-weight:700; font-size:16px; }
+    .option-tags{ opacity:.8; font-size:12px; }
+
+    .side{ display:grid; gap:12px; }
+    .meters, .testers, .controls{ background:var(--panel); border:1px solid rgba(255,255,255,.06); border-radius:20px; padding:12px; }
+    .meter{ margin:6px 0; }
+    .meter-label{ display:flex; justify-content:space-between; font-size:13px; opacity:.9; }
+    .bar{ height:18px; background:#0b1220; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.08); }
+    .fill{ height:100%; width:0%; transition: width .4s ease; }
+    .fill.inclusion{ background: linear-gradient(90deg, var(--bad), var(--mid), var(--good)); }
+    .fill.sesgo{ background: linear-gradient(90deg, var(--good), var(--mid), var(--bad)); }
+
+    .testers-list{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+    .tester{ background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:10px; display:grid; gap:6px; align-items:center; text-align:center; }
+    .tester .avatar{ font-size:34px; }
+    .tester .face{ font-size:22px; }
+    .stars{ letter-spacing:2px; font-size:16px; }
+
+    .controls .row{ display:flex; gap:8px; flex-wrap:wrap; }
+    .controls .btn{ flex:1; min-width:180px; }
+
+    .hint{ font-size:12px; opacity:.8; text-align:center; margin-top:6px; }
+
+    /* TEST/RESULTS OVERLAYS */
+    .overlay{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.65); padding:20px; }
+    .overlay.active{ display:flex; }
+    .box{ background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:22px; padding:18px; width:min(860px,100%); text-align:center; }
+    .assembling{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .gear{ width:88px; height:88px; border-radius:50%; border:10px dotted var(--acc2); animation:spin 4s linear infinite; }
+
+    .result-title{ font-size:28px; font-weight:900; margin-top:6px; }
+    .summary{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px; }
+    .summary .tile{ background:var(--panel); border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:10px; }
+
+    /* Subtítulos y micro-toasts */
+    .captions{ position:fixed; left:0; right:0; bottom:8px; display:flex; justify-content:center; pointer-events:none; }
+    .caption-bubble{ background:rgba(0,0,0,.65); border:1px solid rgba(255,255,255,.1); padding:8px 12px; border-radius:999px; font-weight:800; max-width:85%; text-align:center; }
+    .toast{ position:fixed; top:12px; right:12px; background:rgba(0,0,0,.8); border:1px solid rgba(255,255,255,.12); padding:8px 12px; border-radius:12px; opacity:0; transform:translateY(-8px); transition:.3s; }
+    .toast.show{ opacity:1; transform:translateY(0); }
+
+    /* Utilidades */
+    .hidden{ display:none !important; }
+    .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+    @media (max-width:980px){
+      .desk{ grid-template-columns: 1fr; }
+      .stage{ grid-template-columns: 1fr; }
+      .slides{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="high-contrast">
+  <div class="app" id="app">
+    <!-- TOP BAR -->
+    <div class="topbar" aria-label="Barra superior de controles">
+      <div class="brand" aria-hidden="true">
+        <div class="logo" role="img" aria-label="Logo cerebro luminoso"></div>
+        <div>
+          <div style="font-size:14px; opacity:.8">El Estudio de Juegos del Futuro</div>
+          <div style="font-size:16px; font-weight:900">Diseñador Inclusivo</div>
+        </div>
+      </div>
+      <div class="toggles" role="group" aria-label="Ajustes rápidos">
+        <label class="toggle" title="Música">
+          <span class="ico">🎵</span>
+          <input type="checkbox" id="tg-music" checked>
+        </label>
+        <label class="toggle" title="Voz en off">
+          <span class="ico">🗣️</span>
+          <input type="checkbox" id="tg-voice" checked>
+        </label>
+        <label class="toggle" title="Subtítulos">
+          <span class="ico">💬</span>
+          <input type="checkbox" id="tg-captions" checked>
+        </label>
+        <label class="toggle" title="Alto contraste (ON por defecto)">
+          <span class="ico">⚫</span>
+          <input type="checkbox" id="tg-contrast" checked>
+        </label>
+        <label class="toggle" title="Modo daltonismo">
+          <span class="ico">🟦🟧</span>
+          <input type="checkbox" id="tg-cblind">
+        </label>
+      </div>
+    </div>
+
+    <!-- PANTALLA: INICIO -->
+    <section class="screen start active" id="screen-start" aria-label="Pantalla de inicio">
+      <div class="center">
+        <h1 class="title">El Estudio de Juegos del Futuro: <br> <span style="color:var(--acc2)">Diseñador Inclusivo</span></h1>
+        <div class="subtitle">Meta (Ciudadanía Digital): Comprender cómo los datos de entrenamiento afectan la justicia de una IA y diseñar para la inclusión.</div>
+        <div class="btns" style="margin-top:20px">
+          <button id="btn-play" class="btn" aria-label="Jugar ahora">▶ Jugar</button>
+          <button id="btn-how" class="btn secondary" aria-label="Cómo se juega">❔ Cómo se juega</button>
+        </div>
+        <div class="hint">Controles: 1,2,3 (secciones) · A/B (carpetas) · T (Testear) · R (Rehacer) · Enter (Continuar)</div>
+      </div>
+    </section>
+
+    <!-- MODAL: CÓMO SE JUEGA (3 láminas) -->
+    <div class="modal" id="modal-how" aria-modal="true" role="dialog" aria-label="Cómo se juega">
+      <div class="card">
+        <div class="slides">
+          <div class="slide-ill" id="slide-1-ill" aria-hidden="true">
+            <!-- Lámina 1: La IA aprende de ejemplos -->
+            <svg viewBox="0 0 200 140">
+              <defs>
+                <linearGradient id="g1" x1="0" x2="1">
+                  <stop offset="0" stop-color="#06b6d4"/>
+                  <stop offset="1" stop-color="#8b5cf6"/>
+                </linearGradient>
+              </defs>
+              <rect x="8" y="8" width="184" height="124" rx="16" fill="#0b1220" stroke="#27405f"/>
+              <circle cx="60" cy="70" r="26" fill="url(#g1)"/>
+              <rect x="100" y="40" width="72" height="24" rx="8" fill="#22324e"/>
+              <rect x="100" y="74" width="72" height="24" rx="8" fill="#22324e"/>
+              <rect x="100" y="108" width="72" height="12" rx="6" fill="#22324e"/>
+            </svg>
+          </div>
+          <div class="slide-text" id="slide-1-text">La IA aprende de <u>ejemplos</u>.</div>
+
+          <div class="slide-ill" id="slide-2-ill" aria-hidden="true">
+            <!-- Lámina 2: Pocos ejemplos → sesgo -->
+            <svg viewBox="0 0 200 140">
+              <rect x="8" y="8" width="184" height="124" rx="16" fill="#0b1220" stroke="#27405f"/>
+              <g>
+                <rect x="24" y="24" width="60" height="40" rx="6" fill="#2b3550"/>
+                <text x="54" y="50" font-size="20" text-anchor="middle" fill="#fff">🗡️</text>
+              </g>
+              <rect x="100" y="24" width="84" height="40" rx="6" fill="#3b1f2b"/>
+              <text x="142" y="50" font-size="16" text-anchor="middle" fill="#fff">Juego: Lucha</text>
+            </svg>
+          </div>
+          <div class="slide-text" id="slide-2-text">Pocos ejemplos → <span style="color:var(--err)">sesgo</span>.</div>
+
+          <div class="slide-ill" id="slide-3-ill" aria-hidden="true">
+            <!-- Lámina 3: Variedad → inclusión -->
+            <svg viewBox="0 0 200 140">
+              <rect x="8" y="8" width="184" height="124" rx="16" fill="#0b1220" stroke="#27405f"/>
+              <g>
+                <rect x="16" y="20" width="40" height="40" rx="8" fill="#2b3550"/>
+                <text x="36" y="46" font-size="20" text-anchor="middle" fill="#fff">🧙</text>
+                <rect x="64" y="20" width="40" height="40" rx="8" fill="#2b3550"/>
+                <text x="84" y="46" font-size="20" text-anchor="middle" fill="#fff">🤖</text>
+                <rect x="112" y="20" width="40" height="40" rx="8" fill="#2b3550"/>
+                <text x="132" y="46" font-size="20" text-anchor="middle" fill="#fff">🦊</text>
+              </g>
+              <rect x="24" y="80" width="152" height="40" rx="10" fill="#18314f"/>
+              <text x="100" y="106" font-size="16" text-anchor="middle" fill="#fff">Juego: Aventura, Puzzles y Combate</text>
+            </svg>
+          </div>
+          <div class="slide-text" id="slide-3-text">Variedad de ejemplos → <span style="color:var(--acc1)">inclusión</span>.</div>
+        </div>
+        <div class="controls">
+          <button class="btn secondary" id="btn-how-prev">⬅</button>
+          <div class="pill">3 láminas</div>
+          <div style="display:flex; gap:8px">
+            <button class="btn secondary" id="btn-how-close">Cerrar</button>
+            <button class="btn" id="btn-how-next">Siguiente</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANTALLA: BRIEFING -->
+    <section class="screen briefing" id="screen-briefing" aria-label="Briefing del estudio">
+      <div class="stage">
+        <div class="panel">
+          <h2 style="margin:6px 0">La Productora y Gen.IA</h2>
+          <div class="chars">
+            <div class="char exec" aria-label="Productora Ejecutiva">
+              <div class="name">Productora</div>
+              <div style="font-size:78px">🎬</div>
+            </div>
+            <div class="char genia" aria-label="Gen.IA, cerebro luminoso">
+              <div class="name">Gen.IA</div>
+              <div class="brain"></div>
+            </div>
+          </div>
+          <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="pill">“La IA aprende de ejemplos.”</span>
+            <span class="pill">“Pocos ejemplos → sesgo.”</span>
+            <span class="pill">“Variedad de ejemplos → inclusión.”</span>
+          </div>
+        </div>
+        <div class="panel">
+          <h2 style="margin:6px 0">Mini‑demostración</h2>
+          <div class="demo">
+            <div class="folder" aria-label="Carpeta con solo espadas">
+              <div class="tab"></div>
+              <div>
+                <div class="item" title="espada">🗡️</div>
+                <div class="item" title="espada">🗡️</div>
+                <div class="item" title="espada">🗡️</div>
+                <div class="item" title="espada">🗡️</div>
+              </div>
+            </div>
+            <div class="gameout">
+              <span class="pill">Gen.IA crea: <b>Lucha</b></span>
+              <span class="pill">Guerrero 😃</span>
+              <span class="pill">Mago 😐</span>
+              <span class="pill">Explorador 😐</span>
+            </div>
+            <div class="folder" aria-label="Carpeta variada">
+              <div class="tab" style="background:var(--acc2)"></div>
+              <div>
+                <div class="item" title="mago">🧙</div>
+                <div class="item" title="robot">🤖</div>
+                <div class="item" title="zorro">🦊</div>
+                <div class="item" title="espada">🗡️</div>
+              </div>
+            </div>
+            <div class="gameout">
+              <span class="pill">Gen.IA crea: <b>Aventura mixta</b></span>
+              <span class="pill">Guerrero 🙂</span>
+              <span class="pill">Mago 😃</span>
+              <span class="pill">Explorador 😃</span>
+            </div>
+          </div>
+          <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div class="pill">Mensaje clave: <b>“Piensa en todos los jugadores.”</b></div>
+            <button id="btn-brief-next" class="btn">¡Entendido!</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANTALLA: MESA DE DISEÑO (DECISIONES) -->
+    <section class="screen" id="screen-design" aria-label="Mesa de diseño">
+      <div class="desk">
+        <div class="picker">
+          <div class="group" id="grp-avatares">
+            <div class="group-title">1) Diseño de Personajes (Avatares)
+              <span class="pill">Elige Carpeta A o B</span>
+            </div>
+            <div class="cards">
+              <button class="card-btn" data-group="avatares" data-choice="A" aria-label="Carpeta A: Príncipes y princesas">
+                <div class="label">A</div>
+                <div class="folder-icon"></div>
+                <div class="option-text">Príncipes y princesas</div>
+                <div class="option-tags">poca variedad</div>
+              </button>
+              <button class="card-btn" data-group="avatares" data-choice="B" aria-label="Carpeta B: Varios estilos y diversidad">
+                <div class="label">B</div>
+                <div class="folder-icon"></div>
+                <div class="option-text">Varios estilos y diversidad</div>
+                <div class="option-tags">robots, animales, magos, tonos de piel</div>
+              </button>
+            </div>
+          </div>
+
+          <hr style="border-color: rgba(255,255,255,.08); margin:14px 0">
+
+          <div class="group" id="grp-musica">
+            <div class="group-title">2) Música del Juego <span class="pill">Elige A o B</span></div>
+            <div class="cards">
+              <button class="card-btn" data-group="musica" data-choice="A" aria-label="Carpeta A: Solo rock intenso">
+                <div class="label">A</div>
+                <div class="folder-icon"></div>
+                <div class="option-text">Solo rock intenso</div>
+                <div class="option-tags">poca variedad</div>
+              </button>
+              <button class="card-btn" data-group="musica" data-choice="B" aria-label="Carpeta B: Mezcla de estilos">
+                <div class="label">B</div>
+                <div class="folder-icon"></div>
+                <div class="option-text">Mezcla de estilos</div>
+                <div class="option-tags">rock, pop alegre y misterio</div>
+              </button>
+            </div>
+          </div>
+
+          <hr style="border-color: rgba(255,255,255,.08); margin:14px 0">
+
+          <div class="group" id="grp-niveles">
+            <div class="group-title">3) Diseño de Niveles <span class="pill">Elige A o B</span></div>
+            <div class="cards">
+              <button class="card-btn" data-group="niveles" data-choice="A" aria-label="Carpeta A: Solo combate">
+                <div class="label">A</div>
+                <div class="folder-icon"></div>
+                <div class="option-text">Solo combate</div>
+                <div class="option-tags">acción rápida</div>
+              </button>
+              <button class="card-btn" data-group="niveles" data-choice="B" aria-label="Carpeta B: Combate + exploración + puzzles">
+                <div class="label">B</div>
+                <div class="folder-icon"></div>
+                <div class="option-text">Combate + exploración + puzzles</div>
+                <div class="option-tags">variedad de retos</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="side">
+          <div class="meters">
+            <div class="group-title">Indicadores</div>
+            <div class="meter">
+              <div class="meter-label"><span>Medidor de Inclusión</span><span id="inc-val">50%</span></div>
+              <div class="bar striped"><div class="fill inclusion" id="inc-bar" style="width:50%"></div></div>
+            </div>
+            <div class="meter">
+              <div class="meter-label"><span>Índice de Sesgo (alto=peor)</span><span id="ses-val">50%</span></div>
+              <div class="bar striped"><div class="fill sesgo" id="ses-bar" style="width:50%"></div></div>
+            </div>
+          </div>
+
+          <div class="testers">
+            <div class="group-title">Testers IA (en tiempo real)</div>
+            <div class="testers-list">
+              <div class="tester" id="t-guerrero">
+                <div class="avatar" aria-hidden="true">🛡️</div>
+                <div>Guerrero</div>
+                <div class="face" id="f-guerrero">😐</div>
+                <div class="stars" id="s-guerrero">☆☆☆☆☆</div>
+              </div>
+              <div class="tester" id="t-mago">
+                <div class="avatar" aria-hidden="true">🪄</div>
+                <div>Mago</div>
+                <div class="face" id="f-mago">😐</div>
+                <div class="stars" id="s-mago">☆☆☆☆☆</div>
+              </div>
+              <div class="tester" id="t-explorador">
+                <div class="avatar" aria-hidden="true">🧭</div>
+                <div>Explorador</div>
+                <div class="face" id="f-explorador">😐</div>
+                <div class="stars" id="s-explorador">☆☆☆☆☆</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <div class="row">
+              <button class="btn" id="btn-next-decision" aria-label="Siguiente decisión">Siguiente decisión</button>
+              <button class="btn secondary" id="btn-test" aria-label="Probar ahora" disabled>Probar ahora</button>
+              <button class="btn secondary" id="btn-reset" aria-label="Rehacer">Rehacer</button>
+            </div>
+            <div class="hint">Meta: Promedio ≥ 4 ⭐ y Inclusión ≥ 80%</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- OVERLAY: PROCESO DE TESTEO -->
+    <div class="overlay" id="overlay-test">
+      <div class="box">
+        <div class="assembling">
+          <div class="gear"></div>
+          <div><b>Gen.IA</b> está ensamblando tu juego…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OVERLAY: RESULTADO FINAL -->
+    <div class="overlay" id="overlay-result">
+      <div class="box">
+        <div id="result-icon" style="font-size:48px">🎉</div>
+        <div class="result-title" id="result-title">¡Juego divertido para todos!</div>
+        <div id="result-phrase" style="margin-top:6px; opacity:.9">Con datos diversos, la diversión es para todos.</div>
+        <div class="summary">
+          <div class="tile">
+            <div><b>Estrellas promedio</b></div>
+            <div id="sum-stars" style="font-size:22px">—</div>
+          </div>
+          <div class="tile">
+            <div><b>Inclusión / Sesgo</b></div>
+            <div id="sum-incs" style="font-size:22px">—</div>
+          </div>
+          <div class="tile">
+            <div><b>Avatares</b></div>
+            <div id="sum-ava">—</div>
+          </div>
+          <div class="tile">
+            <div><b>Niveles</b></div>
+            <div id="sum-niv">—</div>
+          </div>
+        </div>
+        <div class="btns" style="margin-top:12px">
+          <button class="btn" id="btn-keep-edit">Cambiar una carpeta</button>
+          <button class="btn secondary" id="btn-restart">Rehacer todo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subtítulos (breves) -->
+    <div class="captions" id="captions">
+      <div class="caption-bubble hidden" id="caption-bubble">&nbsp;</div>
+    </div>
+
+    <!-- Toast de micro-frases -->
+    <div class="toast" id="toast">&nbsp;</div>
+
+  </div>
+
+  <script>
+  // ==============================================================
+  //  DATOS DEL JUEGO (EDITABLES POR DOCENTES)
+  // ==============================================================
+  const testers = [
+    {id:"guerrero", nombre:"Guerrero", gustos:["combate","rock","avatares_heroicos","variedad"], peso:1},
+    {id:"mago", nombre:"Mago", gustos:["puzzles","misterio","magia","variedad"], peso:1},
+    {id:"explorador", nombre:"Explorador", gustos:["exploracion","pop_alegre","animales","variedad"], peso:1}
+  ];
+
+  const decisiones = [
+    { id:"avatares", titulo:"Diseño de Personajes",
+      opciones:{
+        A:{tags:["avatares_heroicos"], variedad:false, texto:"Príncipes y princesas", costo:1, opcionesCount:2},
+        B:{tags:["avatares_heroicos","animales","magia","variedad","diversidad_tonos_piel"], variedad:true, texto:"Varios estilos y diversidad", costo:3, opcionesCount:15}
+      }
+    },
+    { id:"musica", titulo:"Música del Juego",
+      opciones:{
+        A:{tags:["rock"], variedad:false, texto:"Solo rock intenso", costo:1},
+        B:{tags:["rock","pop_alegre","misterio"], variedad:true, texto:"Mezcla de estilos", costo:2}
+      }
+    },
+    { id:"niveles", titulo:"Diseño de Niveles",
+      opciones:{
+        A:{tags:["combate"], variedad:false, texto:"Solo combate", costo:1, tiposCount:1},
+        B:{tags:["combate","exploracion","puzzles"], variedad:true, texto:"Combate + exploración + puzzles", costo:3, tiposCount:3}
+      }
+    }
+  ];
+
+  const score = { inclusion:50, sesgo:50 };
+
+  // ==============================================================
+  //  ESTADO GLOBAL
+  // ==============================================================
+  const State = { INICIO:"inicio", BRIEF:"briefing", DESIGN:"decisiones", TEST:"testeo", RESULT:"resultado" };
+  let appState = State.INICIO;
+  const choices = { avatares:null, musica:null, niveles:null };
+  let audioReady = false;
+
+  // ==============================================================
+  //  VOZ & SUBTÍTULOS (SpeechSynthesis API)
+  // ==============================================================
+  const voiceToggle = document.getElementById('tg-voice');
+  const captionsToggle = document.getElementById('tg-captions');
+  const captionBubble = document.getElementById('caption-bubble');
+
+  function say(text){
+    if(captionsToggle.checked){ showCaption(text); }
+    if(!voiceToggle.checked) return;
+    try{
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'es-MX';
+      u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    }catch(e){ /* dispositivos sin voz */ }
+  }
+  let capTimer=null;
+  function showCaption(text){
+    captionBubble.textContent = text;
+    captionBubble.classList.remove('hidden');
+    clearTimeout(capTimer);
+    capTimer = setTimeout(()=> captionBubble.classList.add('hidden'), 2600);
+  }
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(()=> t.classList.remove('show'), 1800);
+  }
+
+  // ==============================================================
+  //  AUDIO: MÚSICA & SFX (Web Audio API)
+  // ==============================================================
+  const musicToggle = document.getElementById('tg-music');
+  let AC, master, musicGain, beatOsc, padOsc;
+  let sfxGain;
+
+  function initAudio(){
+    if(audioReady) return;
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = 0.9; master.connect(AC.destination);
+    musicGain = AC.createGain(); musicGain.gain.value = musicToggle.checked ? 0.25 : 0; musicGain.connect(master);
+    sfxGain = AC.createGain(); sfxGain.gain.value = 0.8; sfxGain.connect(master);
+
+    // Música: un pad + pulso de beat, volumen sube con inclusión
+    padOsc = AC.createOscillator(); padOsc.type = 'sawtooth';
+    const padFilter = AC.createBiquadFilter(); padFilter.type='lowpass'; padFilter.frequency.value = 800;
+    const padGain = AC.createGain(); padGain.gain.value = 0.12; // base
+    padOsc.connect(padFilter); padFilter.connect(padGain); padGain.connect(musicGain);
+    padOsc.start();
+
+    beatOsc = AC.createOscillator(); beatOsc.type = 'square';
+    const beatGain = AC.createGain(); beatGain.gain.value = 0.0; // se abre a golpes
+    beatOsc.connect(beatGain); beatGain.connect(musicGain);
+    beatOsc.start();
+
+    // Secuenciador simple
+    let step=0; const tempoBase = 90; // BPM
+    setInterval(()=>{
+      if(!musicToggle.checked) return;
+      const inc = Math.max(0, Math.min(100, currentInclusion()));
+      const energy = inc/100; // 0..1
+      const bpm = tempoBase + Math.floor(energy*40);
+      const msPerBeat = 60000/bpm;
+      // Golpes en steps 0 y 2
+      if(step%2===0){
+        pulse(beatOsc.frequency, 80 + energy*60, msPerBeat*0.12); // frecuencia sube con energía
+        pulseParam(AC, beatGain.gain, 0.18 + energy*0.2, msPerBeat*0.12);
+      }
+      // LFO al pad
+      padOsc.frequency.setTargetAtTime(180 + energy*140, AC.currentTime, 0.2);
+      step = (step+1)%4;
+    }, 300);
+
+    audioReady = true;
+  }
+
+  function pulseParam(ctx, param, peak, dur){
+    param.cancelScheduledValues(ctx.currentTime);
+    param.setValueAtTime(0.0001, ctx.currentTime);
+    param.linearRampToValueAtTime(peak, ctx.currentTime + dur*0.5);
+    param.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+  }
+  function pulse(param, value, dur){
+    if(!AC) return;
+    param.setValueAtTime(value, AC.currentTime);
+    setTimeout(()=>{}, dur);
+  }
+
+  function sfxIdea(){ if(!AC) return; tone(740); setTimeout(()=>tone(880),120); }
+  function sfxError(){ if(!AC) return; tone(220, 0.06); setTimeout(()=>tone(196,0.06),80); }
+  function sfxFanfare(){ if(!AC) return; [523,659,784].forEach((f,i)=> setTimeout(()=> tone(f,0.18, sfxGain, 0.6), i*150)); }
+
+  function tone(freq=440, dur=0.1, gainNode=sfxGain, vol=0.8){
+    const o = AC.createOscillator(); const g = AC.createGain(); g.gain.value = vol; o.type='triangle';
+    o.frequency.value=freq; o.connect(g); g.connect(gainNode);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + dur); o.stop(AC.currentTime + dur + 0.02);
+  }
+
+  musicToggle.addEventListener('change', ()=>{ if(musicGain){ musicGain.gain.value = musicToggle.checked ? 0.25 : 0; }});
+
+  // ==============================================================
+  //  LÓGICA DE PUNTUACIÓN
+  //  - Elegir variedad=true: inclusion += 25, sesgo -= 20
+  //  - Satisfacción tester (1–5): 3 + coincidencias(tags elegidos, gustos)/2  (clamp 1–5)
+  // ==============================================================
+  function selectedTags(){
+    const tags = new Set();
+    for(const d of decisiones){
+      const c = choices[d.id];
+      if(!c) continue;
+      d.opciones[c].tags.forEach(t=> tags.add(t));
+    }
+    return [...tags];
+  }
+
+  function calcInclusionSesgo(){
+    let inc = 50, ses = 50;
+    for(const d of decisiones){
+      const c = choices[d.id];
+      if(!c) continue;
+      const opt = d.opciones[c];
+      if(opt.variedad){ inc += 25; ses -= 20; }
+    }
+    inc = Math.max(0, Math.min(100, inc));
+    ses = Math.max(0, Math.min(100, ses));
+    return {inc, ses};
+  }
+
+  function scoreTester(tester){
+    const tags = selectedTags();
+    let matches = 0; tester.gustos.forEach(g=>{ if(tags.includes(g)) matches++; });
+    let val = 3 + matches/2; // 0,0.5,1.0,…
+    val = Math.max(1, Math.min(5, val));
+    return val;
+  }
+
+  function avgStars(){
+    const vals = testers.map(scoreTester);
+    return vals.reduce((a,b)=>a+b,0)/vals.length;
+  }
+
+  function currentInclusion(){ return calcInclusionSesgo().inc; }
+
+  // UI helpers for stars/faces
+  function starsStr(n){
+    const rounded = Math.round(n); let s='';
+    for(let i=1;i<=5;i++) s += (i<=rounded?'★':'☆');
+    return s;
+  }
+  function faceFromStars(n){
+    if(n>=4.5) return '😃';
+    if(n>=4.0) return '🙂';
+    if(n>=3.0) return '😐';
+    if(n>=2.0) return '😟';
+    return '😫';
+  }
+
+  function refreshMetersAndTesters(){
+    const {inc, ses} = calcInclusionSesgo();
+    document.getElementById('inc-val').textContent = Math.round(inc) + '%';
+    document.getElementById('ses-val').textContent = Math.round(ses) + '%';
+    document.getElementById('inc-bar').style.width = inc + '%';
+    document.getElementById('ses-bar').style.width = ses + '%';
+
+    testers.forEach(t=>{
+      const val = scoreTester(t);
+      document.getElementById('f-'+t.id).textContent = faceFromStars(val);
+      document.getElementById('s-'+t.id).textContent = starsStr(val);
+    });
+
+    // Habilitar Test si están las 3 decisiones
+    const allChosen = Object.values(choices).every(v=> !!v);
+    document.getElementById('btn-test').disabled = !allChosen;
+  }
+
+  // ==============================================================
+  //  MANEJO DE ESTADO & NAVEGACIÓN
+  // ==============================================================
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function goStart(){ appState = State.INICIO; showScreen('screen-start'); }
+  function goBrief(){ appState = State.BRIEF; showScreen('screen-briefing');
+    say('La I A aprende de ejemplos. Pocos ejemplos provocan sesgo. La variedad crea inclusión.');
+  }
+  function goDesign(){ appState = State.DESIGN; showScreen('screen-design'); refreshMetersAndTesters(); }
+
+  // ==============================================================
+  //  INTERACCIÓN: INICIO & MODAL
+  // ==============================================================
+  const btnPlay = document.getElementById('btn-play');
+  const btnHow = document.getElementById('btn-how');
+  const modalHow = document.getElementById('modal-how');
+  const btnHowClose = document.getElementById('btn-how-close');
+  const btnHowNext = document.getElementById('btn-how-next');
+  const btnHowPrev = document.getElementById('btn-how-prev');
+  let slideIndex = 0; const slides = [
+    {text:'La IA aprende de ejemplos.'},
+    {text:'Pocos ejemplos → sesgo.'},
+    {text:'Variedad de ejemplos → inclusión.'}
+  ];
+
+  function renderSlide(){
+    const texts = [document.getElementById('slide-1-text'), document.getElementById('slide-2-text'), document.getElementById('slide-3-text')];
+    texts.forEach((el,i)=> el.style.opacity = (i===slideIndex?1:.5));
+    say(slides[slideIndex].text);
+  }
+
+  btnPlay.addEventListener('click', ()=>{
+    initAudio();
+    goBrief();
+  });
+  btnHow.addEventListener('click', ()=>{ modalHow.classList.add('active'); renderSlide(); });
+  btnHowClose.addEventListener('click', ()=>{ modalHow.classList.remove('active'); });
+  btnHowNext.addEventListener('click', ()=>{ slideIndex = (slideIndex+1)%3; renderSlide(); });
+  btnHowPrev.addEventListener('click', ()=>{ slideIndex = (slideIndex+2)%3; renderSlide(); });
+
+  // ==============================================================
+  //  BRIEFING → DISEÑO
+  // ==============================================================
+  document.getElementById('btn-brief-next').addEventListener('click', ()=>{
+    say('Piensa en todos los jugadores.');
+    goDesign();
+  });
+
+  // ==============================================================
+  //  ELECCIÓN DE CARPETAS (A/B) + FEEDBACK
+  // ==============================================================
+  document.querySelectorAll('.card-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> selectChoice(btn.dataset.group, btn.dataset.choice));
+  });
+
+  function selectChoice(group, choice){
+    choices[group] = choice;
+    // marcar visualmente
+    document.querySelectorAll(`.card-btn[data-group="${group}"]`).forEach(b=> b.classList.remove('selected'));
+    document.querySelector(`.card-btn[data-group="${group}"][data-choice="${choice}"]`).classList.add('selected');
+
+    // feedback auditivo/voz
+    const d = decisiones.find(x=> x.id===group);
+    const picked = d.opciones[choice];
+    if(picked.variedad){ sfxIdea(); say('¡Gran elección: piensas en todos!'); toast('Variedad gana'); }
+    else{ sfxError(); say('Muy poca variedad'); toast('Prueba más estilos'); }
+
+    refreshMetersAndTesters();
+  }
+
+  // Siguiente decisión (salta a la primera sin elegir)
+  document.getElementById('btn-next-decision').addEventListener('click', ()=>{
+    const order = ['avatares','musica','niveles'];
+    const next = order.find(id => !choices[id]);
+    const map = {avatares:'grp-avatares', musica:'grp-musica', niveles:'grp-niveles'};
+    if(next){
+      document.getElementById(map[next]).scrollIntoView({behavior:'smooth', block:'center'});
+      toast('Elige A o B');
+    }else{
+      document.getElementById('btn-test').focus(); toast('¡Listo para probar!');
+    }
+  });
+
+  // Rehacer (reset)
+  document.getElementById('btn-reset').addEventListener('click', resetAll);
+  function resetAll(){
+    Object.keys(choices).forEach(k=> choices[k]=null);
+    document.querySelectorAll('.card-btn').forEach(b=> b.classList.remove('selected'));
+    score.inclusion=50; score.sesgo=50; refreshMetersAndTesters();
+    say('Volvamos a la mesa.');
+  }
+
+  // ==============================================================
+  //  TESTEO (simulación visible)
+  // ==============================================================
+  const overlayTest = document.getElementById('overlay-test');
+  const overlayResult = document.getElementById('overlay-result');
+  const btnTest = document.getElementById('btn-test');
+
+  btnTest.addEventListener('click', ()=>{
+    overlayTest.classList.add('active');
+    say('Probando tu juego con testers.');
+
+    setTimeout(()=>{
+      overlayTest.classList.remove('active');
+      // calcular estrellas
+      const vals = testers.map(scoreTester);
+      const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+      const {inc, ses} = calcInclusionSesgo();
+
+      // resultado
+      const win = (avg>=4 && inc>=80);
+      document.getElementById('result-icon').textContent = win ? '🏆' : '🔄';
+      document.getElementById('result-title').textContent = win ? '¡Juego divertido para todos!' : 'Alguien quedó fuera; revisa tus ejemplos';
+      document.getElementById('result-phrase').textContent = 'Con datos diversos, la diversión es para todos.';
+      document.getElementById('sum-stars').textContent = `${avg.toFixed(2)} / 5`;
+      document.getElementById('sum-incs').textContent = `${Math.round(inc)}% inclusión · ${Math.round(ses)}% sesgo`;
+
+      const avSel = choices.avatares || 'A';
+      const avCount = decisiones[0].opciones[avSel].opcionesCount || (avSel==='A'?2:15);
+      const nvSel = choices.niveles || 'A';
+      const nvCount = decisiones[2].opciones[nvSel].tiposCount || (nvSel==='A'?1:3);
+      document.getElementById('sum-ava').textContent = `${avCount} opciones`;
+      document.getElementById('sum-niv').textContent = `${nvCount} tipos`;
+
+      overlayResult.classList.add('active');
+
+      if(win){ sfxFanfare(); say('¡Juego divertido para todos!'); }
+      else{ say('Volvamos a la mesa. Puedes cambiar una carpeta.'); }
+
+    }, 1200);
+  });
+
+  // Cambiar una carpeta / Rehacer todo
+  document.getElementById('btn-keep-edit').addEventListener('click', ()=>{
+    overlayResult.classList.remove('active');
+    goDesign();
+    toast('Cambia una carpeta y vuelve a probar');
+  });
+  document.getElementById('btn-restart').addEventListener('click', ()=>{
+    overlayResult.classList.remove('active');
+    resetAll();
+    goDesign();
+  });
+
+  // ==============================================================
+  //  ACCESIBILIDAD: CONTRASTE & DALTONISMO
+  // ==============================================================
+  const contrastToggle = document.getElementById('tg-contrast');
+  const cblindToggle = document.getElementById('tg-cblind');
+  const bodyEl = document.body;
+  contrastToggle.addEventListener('change', ()=>{
+    bodyEl.classList.toggle('high-contrast', contrastToggle.checked);
+  });
+  cblindToggle.addEventListener('change', ()=>{
+    bodyEl.classList.toggle('colorblind', cblindToggle.checked);
+  });
+
+  // ==============================================================
+  //  TECLADO (1/2/3 A/B T R Enter)
+  // ==============================================================
+  window.addEventListener('keydown', (e)=>{
+    const k = e.key.toLowerCase();
+    if(k==='enter'){
+      if(appState===State.INICIO){ initAudio(); goBrief(); }
+      else if(appState===State.BRIEF){ goDesign(); }
+    }
+    if(appState!==State.DESIGN) return;
+    if(['1','2','3'].includes(k)){
+      const map = { '1':'grp-avatares', '2':'grp-musica', '3':'grp-niveles' };
+      document.getElementById(map[k]).scrollIntoView({behavior:'smooth', block:'center'});
+      toast('Elige A o B');
+    }
+    if(k==='a'){ // elegir A del grupo más cercano sin elegir
+      pickAuto('A');
+    }
+    if(k==='b'){ pickAuto('B'); }
+    if(k==='t'){ document.getElementById('btn-test').click(); }
+    if(k==='r'){ resetAll(); }
+  });
+
+  function pickAuto(choice){
+    const order = ['avatares','musica','niveles'];
+    const target = order.find(id => !choices[id]) || order[0];
+    selectChoice(target, choice);
+  }
+
+  // ==============================================================
+  //  MODO PRESUPUESTO (beta, preparado para ampliar)
+  //  - Ejemplo: límite de coste; maximizar inclusión con costo ≤ presupuesto
+  //  - Para activarlo: desarrollar UI usando decisiones[*].opciones.*.costo
+  // ==============================================================
+  const Presupuesto = { activo:false, limite:5 };
+  function costoTotal(){
+    let c=0; for(const d of decisiones){ const ch = choices[d.id]; if(ch) c += (d.opciones[ch].costo||0); } return c;
+  }
+  // (Reservado para futuras iteraciones)
+
+  // Iniciar en la pantalla de inicio
+  goStart();
+
+  </script>
+</body>
+</html>
