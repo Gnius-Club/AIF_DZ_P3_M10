@@ -1,443 +1,760 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Playbook-P3-TM10</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Misión 10: Chefs de la IA - Edición Experta</title>
+  <style>
+    :root {
+      /* Paleta de Alto Contraste para Niños */
+      --bg-deep: #020617;      /* Negro azulado profundo */
+      --panel-bg: #1e293b;     /* Gris pizarra */
+      --text-main: #ffffff;    /* Blanco puro */
+      --text-muted: #cbd5e1;   /* Gris claro */
+      
+      --accent-genia: #a855f7; /* Violeta vibrante (IA) */
+      --accent-action: #0ea5e9;/* Azul Cyan (Botones) */
+      --success: #22c55e;      /* Verde éxito */
+      --warning: #facc15;      /* Amarillo alerta */
+      --danger: #ef4444;       /* Rojo error */
+      
+      --font-body: 'Verdana', sans-serif; /* Tipografía muy legible */
+    }
+
+    * { box-sizing: border-box; user-select: none; }
+
+    body {
+      margin: 0;
+      background-color: var(--bg-deep);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* --- UI GENERICA --- */
+    button { cursor: pointer; border: none; font-family: inherit; transition: transform 0.1s, filter 0.2s; }
+    button:active { transform: scale(0.96); }
+    
+    .hidden { display: none !important; }
+    .fade-in { animation: fadeIn 0.5s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Barra Superior */
+    header {
+      background: rgba(30, 41, 59, 0.9);
+      border-bottom: 2px solid var(--accent-genia);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo-glow { 
+      font-size: 28px; background: var(--accent-genia); 
+      width: 48px; height: 48px; border-radius: 12px; 
+      display: grid; place-items: center; 
+      box-shadow: 0 0 15px var(--accent-genia);
+    }
+    .game-title h1 { margin: 0; font-size: 20px; color: var(--warning); text-transform: uppercase; letter-spacing: 1px; }
+    .game-title span { font-size: 12px; color: var(--text-muted); }
+
+    .controls { display: flex; gap: 10px; }
+    .icon-btn { 
+      background: #334155; color: white; padding: 8px 16px; 
+      border-radius: 20px; font-weight: bold; border: 1px solid #475569;
+    }
+    .icon-btn.active { background: var(--success); border-color: var(--success); color: #000; }
+
+    /* Contenedor Central */
+    main {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    /* PANTALLAS */
+    .screen {
+      display: none;
+      height: 100%;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .screen.active { display: flex; }
+
+    /* --- PANTALLA INICIO --- */
+    .hero-card {
+      background: var(--panel-bg);
+      border: 3px solid var(--accent-action);
+      padding: 40px;
+      border-radius: 24px;
+      text-align: center;
+      max-width: 700px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
+    .big-title { font-size: 42px; margin: 0 0 20px 0; color: var(--text-main); text-shadow: 0 4px 0 #000; }
+    .big-title span { color: var(--accent-genia); }
+    .start-btn {
+      background: linear-gradient(to bottom, #38bdf8, #0284c7);
+      font-size: 28px; padding: 20px 60px; border-radius: 50px;
+      color: white; font-weight: 900; box-shadow: 0 8px 0 #0369a1, 0 15px 20px rgba(0,0,0,0.4);
+      margin-top: 30px; transition: transform 0.1s;
+    }
+    .start-btn:active { transform: translateY(8px); box-shadow: 0 0 0 #0369a1; }
+
+    /* --- TUTORIAL (Diseño Narrativo) --- */
+    .tutorial-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 30px;
+      background: var(--panel-bg);
+      padding: 30px;
+      border-radius: 24px;
+      border: 2px solid #475569;
+      max-width: 1000px;
+      width: 100%;
+    }
+    .producer-avatar {
+      background: #0f172a;
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+      border: 2px solid var(--warning);
+    }
+    .avatar-img { font-size: 100px; display: block; margin-bottom: 10px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+    .speech-bubble {
+      background: #fff;
+      color: #000;
+      padding: 25px;
+      border-radius: 20px;
+      font-size: 20px;
+      line-height: 1.5;
+      position: relative;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .speech-bubble::after { /* Pico del globo */
+      content: ''; position: absolute; left: -20px; top: 40px;
+      border: 10px solid transparent; border-right-color: #fff;
+    }
+    
+    .interactive-area {
+      margin-top: 20px;
+      background: rgba(0,0,0,0.3);
+      padding: 20px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      border: 2px dashed #64748b;
+    }
+    
+    /* Animación de "Click aquí" */
+    .pointer-hand {
+      font-size: 40px;
+      position: absolute;
+      animation: point 1s infinite alternate;
+      z-index: 10;
+      filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
+      pointer-events: none;
+    }
+    @keyframes point { from { transform: translateY(0); } to { transform: translateY(-15px); } }
+
+    .tut-folder-btn {
+      background: var(--warning); color: #000;
+      width: 120px; height: 100px; border-radius: 12px;
+      font-weight: bold; font-size: 16px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      box-shadow: 0 6px 0 #b45309;
+      position: relative;
+    }
+    .tut-folder-btn:active { transform: translateY(6px); box-shadow: none; }
+
+    /* --- MESA DE JUEGO (GAMEPLAY) --- */
+    .game-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .main-panel {
+      display: flex; flex-direction: column; gap: 15px;
+      overflow-y: auto; padding-right: 10px;
+    }
+
+    /* Tarjetas de Decisión */
+    .design-card {
+      background: var(--panel-bg);
+      border: 2px solid #334155;
+      border-radius: 16px;
+      padding: 20px;
+      opacity: 0.5;
+      pointer-events: none;
+      transition: all 0.3s;
+    }
+    .design-card.active { opacity: 1; pointer-events: all; border-color: var(--accent-action); box-shadow: 0 0 20px rgba(14, 165, 233, 0.2); }
+    .design-card.done { opacity: 0.8; border-color: var(--success); background: #064e3b; }
+
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .card-title { font-size: 20px; font-weight: bold; color: var(--accent-action); }
+    .card-title.done-text { color: var(--success); }
+
+    .options-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .option-btn {
+      background: #0f172a; border: 2px solid #334155;
+      padding: 15px; border-radius: 12px;
+      display: flex; align-items: center; gap: 15px;
+      text-align: left; transition: all 0.2s;
+    }
+    .option-btn:hover { background: #1e293b; border-color: #94a3b8; }
+    .option-btn.selected-bad { border-color: var(--warning); background: #451a03; }
+    .option-btn.selected-good { border-color: var(--success); background: #064e3b; }
+    
+    .opt-icon { font-size: 32px; background: rgba(255,255,255,0.1); width: 50px; height: 50px; display: grid; place-items: center; border-radius: 8px; }
+    .opt-text h4 { margin: 0; font-size: 16px; color: #fff; }
+    .opt-text p { margin: 5px 0 0; font-size: 12px; color: #94a3b8; }
+
+    /* Barra Lateral (Testers y Consola) */
+    .sidebar { display: flex; flex-direction: column; gap: 15px; }
+    
+    .console-box {
+      background: #000; border: 1px solid #333;
+      padding: 15px; border-radius: 12px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: var(--success); height: 100px; overflow: hidden;
+    }
+    .console-line { margin-bottom: 4px; border-bottom: 1px dashed #333; padding-bottom: 2px; }
+
+    .testers-box {
+      background: var(--panel-bg); padding: 15px; border-radius: 16px; border: 1px solid #334155;
+      flex: 1; display: flex; flex-direction: column; gap: 10px;
+    }
+    .tester-item {
+      background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px;
+      display: flex; align-items: center; gap: 10px;
+      transition: transform 0.2s;
+    }
+    .tester-item.bounce { animation: bounce 0.5s; }
+    @keyframes bounce { 0%, 100% {transform: scale(1);} 50% {transform: scale(1.1);} }
+
+    .launch-btn {
+      width: 100%; background: #475569; color: #94a3b8;
+      padding: 20px; font-size: 20px; font-weight: bold; border-radius: 12px;
+      cursor: not-allowed;
+    }
+    .launch-btn.ready {
+      background: linear-gradient(90deg, var(--success), #16a34a);
+      color: white; cursor: pointer;
+      animation: pulseGreen 2s infinite;
+    }
+    @keyframes pulseGreen { 0% {box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);} 70% {box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);} 100% {box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);} }
+
+    /* --- RESULTADOS --- */
+    .result-container {
+      background: var(--panel-bg); padding: 40px; border-radius: 30px;
+      border: 4px solid var(--accent-genia); text-align: center; max-width: 600px;
+    }
+    .stars-display { font-size: 50px; color: var(--warning); letter-spacing: 5px; margin: 10px 0; }
+    
+    /* Mensajes Flotantes */
+    .toast {
+      position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+      background: #fff; color: #000; padding: 15px 30px; border-radius: 50px;
+      font-weight: bold; font-size: 18px; opacity: 0; pointer-events: none; transition: 0.3s;
+      z-index: 200; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    }
+    .toast.show { opacity: 1; top: 100px; }
+    .toast.bad { background: var(--danger); color: white; border: 2px solid white; }
+    .toast.good { background: var(--success); color: white; border: 2px solid white; }
+
+  </style>
 </head>
 <body>
-    <header>
-        <h1><span class="book-icon">📋</span> <strong>Playbook: Misión 10 - 3ero de Primaria</strong></h1>
-        <div class="header-widgets">
-            <div class="timer-container">
-                <span id="global-timer">⏱️ 40:00</span>
-                <button id="global-start-stop">Start</button>
-                <button id="global-reset">Reset</button>
-            </div>
-            <div class="theme-toggle">
-                <i class="fas fa-sun"></i>
-                <label class="switch">
-                    <input type="checkbox" id="theme-toggle-input">
-                    <span class="slider round"></span>
-                </label>
-                <i class="fas fa-moon"></i>
-            </div>
-        </div>
-    </header>
-    <div class="main-container">
-        <aside class="activity-list">
-            <h2>Actividades</h2>
-            <ul>
-                <li><a href="#activity-0">📝</a></li>
-                <li><a href="#activity-1">1</a></li>
-                <li><a href="#activity-2">2</a></li>
-                <li><a href="#activity-3">3</a></li>
-                <li><a href="#activity-4">4</a></li>
-                <li><a href="#activity-5">5</a></li>
-            </ul>
-        </aside>
-        <main class="content">
-            <div class="progress-bar">
-                <div class="progress"></div>
-            </div>
-            <!-- ACTIVIDAD 0: DE UN VISTAZO -->
-            <div class="activity-card" id="activity-0">
-                <h2><span class="book-icon">📝</span> De un Vistazo: Comando Central</h2>
-                <p class="overview-subtitle">Todo lo que necesitas para preparar y ejecutar esta misión en minutos.</p>
-                
-                <div class="command-section">
-                    <h3>🎯 Objetivo de Aprendizaje</h3>
-                    <div class="objective-box">
-                        <p><strong>Los estudiantes podrán:</strong> usar el sensor de luz del Micro:Bit para leer niveles de brillo y aplicar operadores de comparación para automatizar respuestas y comprender el concepto de datos analógicos y automatización.</p>
-                    </div>
-                </div>
-                <div class="command-section xolo-prompt">
-                    <h3>🤖 Prompt de Referencia para XOLO (Solo para Maestro)</h3>
-                    <div class="prompt-box">
-                        <div class="prompt-header">
-                            <span class="prompt-label">⚠️ NOTA: XOLO ya conoce el tema de esta misión. Este prompt es SOLO de referencia en caso de emergencia técnica:</span>
-                            <button class="copy-btn" onclick="copyPrompt('main-prompt')">
-                                <i class="fas fa-copy"></i> Copiar
-                            </button>
-                        </div>
-                        <pre id="main-prompt">Explícame qué es un dato analógico usando el sensor de luz: no es solo “sí/no”, sino un valor en un rango. Enséñame cómo leer el número de luz en MakeCode y cómo usar operadores como > y < para crear reglas. Luego guíame a construir un GCS tipo: “SI luz < 50 → mostrar icono de luna, SINO → mostrar sol”. Ayúdame a conectar esto con ejemplos reales: brillo automático de pantalla o luces inteligentes.</pre>
-                    </div>
-                </div>
-                <div class="command-section">
-                    <h3>⚡ Puntos Esenciales de la Misión</h3>
-                    <div class="essentials-grid">
-                        <div class="essential-card">
-                            <div class="essential-icon">🎓</div>
-                            <h4>Concepto Clave</h4>
-                            <p>Datos analógicos: Son valores que pueden variar en un rango (como la luz de 0 a 255), a diferencia de los digitales que solo son encendido o apagado.</p>
-                        </div>
-                        <div class="essential-card">
-                            <div class="essential-icon">🔧</div>
-                            <h4>Habilidad Técnica</h4>
-                            <p>Usar el sensor de luz del Micro:Bit para medir la intensidad del brillo en el ambiente.</p>
-                        </div>
-                        <div class="essential-card">
-                            <div class="essential-icon">🧪</div>
-                            <h4>Experimentación</h4>
-                            <p>Probar con diferentes fuentes de luz y sombras para ver cómo cambian los valores numéricos.</p>
-                        </div>
-                        <div class="essential-card">
-                            <div class="essential-icon">💬</div>
-                            <h4>Interacción con XOLO</h4>
-                            <p>XOLO ya conoce a cada estudiante y el tema de hoy. Solo abren el chat y comienzan a aprender. Tú guías el timing y motivación.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="command-section">
-                    <h3>📦 Checklist de Materiales</h3>
-                    <div class="materials-checklist">
-                        <label><input type="checkbox"> Proyector/pantalla + presentación (5 diapositivas)</label>
-                        <label><input type="checkbox"> Internet estable + Gnius Space con XOLO activo</label>
-                        <label><input type="checkbox"> Micro:Bit (1 por cada 2 estudiantes)</label>
-                        <label><input type="checkbox"> Acceso a MakeCode (https://makecode.microbit.org/)</label>
-                        <label><input type="checkbox"> Cable USB de conexión</label>
-                        <label><input type="checkbox"> ⚠️ Esta misión usa programación con BLOQUES en MakeCode</label>
-                        <label><input type="checkbox"> 📋 No se requieren extensiones externas para esta misión.</label>
-                    </div>
-                    <p class="care-reminder"><strong>🛡️ Cuidado del equipo:</strong> Manipular el Micro:Bit por los bordes, no tocar los pines metálicos y desconectar el cable USB con suavidad.</p>
-                </div>
-                <div class="command-section">
-                    <h3>🗓️ Secuencia de la Misión (40 min)</h3>
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <div class="timeline-dot">1</div>
-                            <div class="timeline-content">
-                                <strong>Intro a la Misión</strong>
-                                <span class="time-badge">2 min</span>
-                                <p>Bienvenida, I Can Statement y contexto de la misión.</p>
-                            </div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot">2</div>
-                            <div class="timeline-content">
-                                <strong>A.I. Gym</strong>
-                                <span class="time-badge">8 min</span>
-                                <p>Los estudiantes abren el chat con XOLO y aprenden sobre datos analógicos y lectura de sensores (sin prompt específico).</p>
-                            </div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot">3</div>
-                            <div class="timeline-content">
-                                <strong>Brain Spark</strong>
-                                <span class="time-badge">20 min</span>
-                                <p>Idear, construir y experimentar un programa con XOLO.</p>
-                            </div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot">4</div>
-                            <div class="timeline-content">
-                                <strong>Gnius STORM - Compartir</strong>
-                                <span class="time-badge">5 min</span>
-                                <p>Demostración y reflexión en parejas.</p>
-                            </div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot">5</div>
-                            <div class="timeline-content">
-                                <strong>Entrega de Evidencias</strong>
-                                <span class="time-badge">5 min</span>
-                                <p>Subir capturas a Gnius Space y finalizar misión.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="command-section">
-                    <h3>🚨 Resolución Rápida de Problemas</h3>
-                    <div class="troubleshooting-list">
-                        <ul>
-                            <li><strong>Si los alumnos no pueden ingresar a Gnius Space:</strong> Activa XOLO SOS en <a href="https://xolo.gnius.club" target="_blank">xolo.gnius.club</a> para continuar la misión sin interrumpir la clase.</li>
-                            <li><strong>Si el Micro:Bit no aparece en la computadora:</strong> Revisar el cable USB y probar en otro puerto.</li>
-<li><strong>Si la pantalla no cambia con la luz:</strong> Revisar que el bloque de 'nivel de luz' esté dentro de un bucle 'por siempre'.</li>
-<li><strong>Si hay errores en el código:</strong> Recordar a los estudiantes que XOLO puede ayudar a depurar. Pídeles que copien el error y se lo muestren a XOLO.</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <!-- ACTIVIDAD 1: INTRO A LA MISIÓN -->
-            <div class="activity-card" id="activity-1">
-                <div class="activity-header">
-                    <h2>🚀 Actividad 1: Intro a la Misión</h2>
-                    <div class="activity-timer">
-                        <span class="activity-duration">⏱️ 2:00</span>
-                        <button class="timer-start-btn" data-duration="120">Iniciar</button>
-                    </div>
-                </div>
-                <div class="roles-section">
-                    <div class="role-card role-teacher">
-                        <h4>👨‍🏫 Rol del Maestro</h4>
-                        <ul>
-                            <li>Dar la bienvenida con energía.</li>
-                            <li>Pedir a los alumnos que ingresen a Gnius Space.</li>
-                            <li>Proyecta diapositiva 1 con el I Can Statement.</li>
-                            <li>Motiva: "¡Hoy le daremos ojos digitales a sus Micro:Bits!".</li>
-                        </ul>
-                    </div>
-                    <div class="role-card role-xolo">
-                        <h4>🤖 Rol de XOLO</h4>
-                        <ul>
-                            <li>XOLO ya está listo y conoce a cada estudiante.</li>
-                            <li>Sabe que hoy toca aprender sobre Datos analógicos y sensores de luz.</li>
-                        </ul>
-                    </div>
-                    <div class="role-card role-student">
-                        <h4>👦 Rol del Alumno</h4>
-                        <ul>
-                            <li>Escucha la misión del día.</li>
-                            <li>Loguearse en Gnius Space.</li>
-                            <li>Preparación para trabajar en parejas.</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="slide-reference">
-                    <h4>📊 Diapositiva 1: I Can Statement</h4>
-                    <div class="slide-content">
-                        <p><strong>🎯 Hoy seré capaz de:</strong></p>
-                        <p class="highlight-text">🤖 A usar el sensor de luz para que el Micro:Bit reaccione al brillo del salón.</p>
-                        <p><strong>Aplicación real:</strong> Los sistemas de alumbrado público usan esta tecnología para encender las lámparas de la calle automáticamente cuando anochece.</p>
-                        <p><strong>Tu aliado:</strong> XOLO ya sabe qué vas a aprender hoy. ¡Solo abre el chat y comienza!</p>
-                    </div>
-                </div>
-            </div>
-            <!-- ACTIVIDAD 2: A.I. GYM -->
-            <div class="activity-card" id="activity-2">
-                <div class="activity-header">
-                    <h2>🧠 Actividad 2: A.I. Gym</h2>
-                    <div class="activity-timer">
-                        <span class="activity-duration">⏱️ 8:00</span>
-                        <button class="timer-start-btn" data-duration="480">Iniciar</button>
-                    </div>
-                </div>
-                <div class="roles-section">
-                    <div class="role-card role-teacher">
-                        <h4>👨‍🏫 Rol del Maestro</h4>
-                        <ul>
-                            <li>Proyecta diapositiva 2.</li>
-                            <li>Indica: "Abran el chat con XOLO y salúdenlo. Él ya sabe qué les va a enseñar hoy."</li>
-                            <li>Circula para asegurar que todos interactúan con XOLO.</li>
-                            <li>Si alguien tiene dudas, recuérdale: "Pregúntale a XOLO, él te puede explicar de otra forma".</li>
-                        </ul>
-                    </div>
-                    <div class="role-card role-xolo">
-                        <h4>🤖 Rol de XOLO</h4>
-                        <p class="xolo-status">✅ XOLO ACTIVO</p>
-                        <ul>
-                            <li>Reconoce al estudiante y sus preferencias de aprendizaje.</li>
-                            <li>Explica cómo el sensor traduce la luz en una escala de números.</li>
-                            <li>Introduce el concepto de datos analógicos como valores continuos.</li>
-                            <li>Responde dudas sobre los conceptos.</li>
-                        </ul>
-                    </div>
-                    <div class="role-card role-student">
-                        <h4>👦 Rol del Alumno</h4>
-                        <ul>
-                            <li>Abrir el chat con XOLO y saludarlo.</li>
-                            <li>Aprender a leer el sensor de luz en MakeCode.</li>
-                            <li>Aprender a usar operadores como mayor que (>) y menor que (<).</li>
-                            <li>Despejar todas sus dudas preguntando a XOLO.</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="slide-reference">
-                    <h4>📊 Diapositiva 2: A.I. GYM</h4>
-                    <div class="slide-content">
-                        <p><strong>💬 Abre el chat con XOLO y salúdalo:</strong></p>
-                        <div class="prompt-box">
-                            <pre>"¡Hola XOLO! Estoy listo para aprender."</pre>
-                        </div>
-                        <p class="highlight-text" style="margin-top: 1rem;">✨ XOLO ya sabe quién eres y qué tema toca hoy. ¡Solo empieza a conversar!</p>
-                        <p class="highlight-text">🎯 Objetivo: Aprender a usar el sensor de luz para entender los datos analógicos.</p>
-                    </div>
-                </div>
-                
-                <div class="optional-script">
-                    <button class="collapsible-button">📖 Ver guion detallado (opcional)</button>
-                    <div class="collapsible-content">
-                        <p class="dialogue assistant">¡Hola, equipo! Hoy vamos a descubrir cómo las máquinas pueden 'ver' el mundo. Abran su chat con XOLO y salúdenlo. XOLO ya los conoce y sabe exactamente qué les va a enseñar hoy. No necesitan escribir un prompt especial, solo empiecen a platicar con él. Vamos a explorar el sensor de luz de su Micro:Bit. Pregúntenle a XOLO qué es un 'dato analógico' y cómo podemos usar números para medir la luz. Él les explicará todo de forma súper sencilla. ¡Adelante!</p>
-                    </div>
-                </div>
-            </div>
-            <!-- ACTIVIDAD 3: BRAIN SPARK -->
-            <div class="activity-card" id="activity-3">
-                <div class="activity-header">
-                    <h2>💡 Actividad 3: Brain Spark</h2>
-                    <div class="activity-timer">
-                        <span class="activity-duration">⏱️ 20:00</span>
-                        <button class="timer-start-btn" data-duration="1200">Iniciar</button>
-                    </div>
-                </div>
-                <div class="roles-section">
-                    <div class="role-card role-teacher">
-                        <h4>👨‍🏫 Rol del Maestro</h4>
-                        <ul>
-                            <li>Proyecta la diapositiva 3.</li>
-                            <li>Indica: "Pidan a XOLO que los ayude a idear un proyecto. Cuando tengan su GCS, pásenlo a bloques en MakeCode, prueben en el simulador y luego con el hardware real".</li>
-                            <li>Entrega por parejas los Micro:Bits conforme los alumnos prueben su GCS en el simulador.</li>
-                            <li>Si hay errores, recuerda: "Pregúntenle a XOLO, él los ayuda a depurar".</li>
-                        </ul>
-                    </div>
-                    <div class="role-card role-xolo">
-                        <h4>🤖 Rol de XOLO</h4>
-                        <p class="xolo-status">✅ XOLO ACTIVO</p>
-                        <ul>
-                            <li>Ayuda a idear un proyecto de luz automática con un VIBE único.</li>
-                            <li>Entrega el GCS de la idea del genio.</li>
-                            <li>Resuelve errores de sintaxis o lógica.</li>
-                        </ul>
-                    </div>
-                    <div class="role-card role-student">
-                        <h4>👦 Rol del Alumno</h4>
-                        <ul>
-                            <li>Trabajar con XOLO una idea y un VIBE para su sistema de luz inteligente.</li>
-                            <li>Traducir el GCS de XOLO a bloques en MakeCode.</li>
-                            <li>Depurar su programa con XOLO si hay errores.</li>
-                            <li>Descargar el programa al Micro:Bit y probarlo con luz real.</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="slide-reference">
-                    <h4>📊 Diapositiva 3: Brain Spark</h4>
-                    <div class="slide-content">
-                        <p><strong>1. 💬 Pide a XOLO que te ayude a crear:</strong></p>
-                        <div class="prompt-box">
-                            <pre>"Ayúdame a idear un proyecto aplicado en MakeCode tipo “luz de noche automática” o “pantalla inteligente” que cambie su comportamiento cuando hay oscuridad. Dame una vibe (ej. “guardian nocturno”, “lámpara inteligente”, “señal de seguridad”). Luego genera el GCS y convierte el código a bloques MakeCode con umbrales sugeridos y opciones de personalización."</pre>
-                        </div>
-                        <p style="margin-top: 1.5rem;"><strong>2. 🔬 Experimenta y descubre con tu programa:</strong></p>
-                        <ul>
-                            <li>¿El Micro:Bit cambia su pantalla cuando hay mucha luz?</li>
-                            <li>¿Qué valor numérico muestra el Micro:Bit cuando lo cubres totalmente?</li>
-                            <li>¿Funciona mejor tu programa con un umbral de 50 o de 200?</li>
-                            <li>¿Por qué el sensor de luz nos da muchos números en lugar de solo decir 'luz' o 'no luz'?</li>
-                            <li>¿Cómo ayuda la automatización basada en sensores a ahorrar energía en una casa?</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="optional-script">
-                    <button class="collapsible-button">📖 Ver guion detallado (opcional)</button>
-                    <div class="collapsible-content">
-                        <p class="dialogue assistant">¡Llegó el momento de la acción! Vamos a construir algo que funcione por sí solo. Imaginen una lámpara inteligente que se activa cuando detecta oscuridad, como un 'Guardián de Sueños'. Primero, usen el prompt en pantalla para que XOLO los ayude a idear su proyecto. Él les dará el GCS, que es el plan maestro para su código. Luego, lleven ese plan a MakeCode usando bloques. Cuando su código esté listo, cárguenlo en su Micro:Bit y prueben qué pasa cuando tapan el sensor. Si el código tiene algún error, ¡no se detengan! Pregúntenle a XOLO cómo arreglarlo. ¡A crear!</p>
-                    </div>
-                </div>
-                <div class="challenge-prompt">
-                    <h4>🚀 Prompt de Desafío (para quienes terminen rápido)</h4>
-                    <div class="prompt-box">
-                        <p><strong>Si ya experimentaste con todo, pregunta a XOLO:</strong></p>
-                        <p class="challenge-text">"Ya probé con la luz de noche. ¿Puedes enseñarme cómo hacer que mi Micro:Bit muestre una carita feliz si la luz es perfecta para leer?"</p>
-                    </div>
-                </div>
-            </div>
-            <!-- ACTIVIDAD 4: GNIUS STORM - COMPARTIR -->
-            <div class="activity-card" id="activity-4">
-                <div class="activity-header">
-                    <h2>⚡ Actividad 4: Gnius STORM - Compartir y Reflexionar</h2>
-                    <div class="activity-timer">
-                        <span class="activity-duration">⏱️ 5:00</span>
-                        <button class="timer-start-btn" data-duration="300">Iniciar</button>
-                    </div>
-                </div>
-                <div class="roles-section">
-                    <div class="role-card role-teacher">
-                        <h4>👨‍🏫 Rol del Maestro</h4>
-                        <ul>
-                            <li>Organiza las parejas para compartir.</li>
-                            <li>Gestiona los tiempos: 2 min demo + 2 min reflexión + 1 min cierre.</li>
-                            <li>Facilita retroalimentación constructiva.</li>
-                            <li>Cierra con reflexión sobre aplicaciones reales.</li>
-                        </ul>
-                    </div>
-                    <div class="role-card role-xolo">
-                        <h4>🤖 Rol de XOLO</h4>
-                        <p class="xolo-status">⏸️ XOLO EN ESPERA</p>
-                        <ul>
-                            <li>Disponible solo si hay dudas finales urgentes.</li>
-                        </ul>
-                    </div>
-                    <div class="role-card role-student">
-                        <h4>👦 Rol del Alumno</h4>
-                        <ul>
-                            <li>Demuestra su programa funcionando a otra pareja.</li>
-                            <li>Explica qué umbral de luz usó en su programa.</li>
-                            <li>Comparte un descubrimiento interesante.</li>
-                            <li>Da retroalimentación positiva al compañero.</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="slide-reference">
-                    <h4>📊 Diapositiva 4: Think-Pair-Share</h4>
-                    <div class="slide-content tps-structure">
-                        <div class="tps-phase">
-                            <h4>🤔 THINK (30 seg)</h4>
-                            <p>Reflexión individual: ¿Qué umbral de luz funcionó mejor para tu proyecto? ¿Qué te sorprendió al medir la luz?</p>
-                        </div>
-                        <div class="tps-phase">
-                            <h4>👥 PAIR (2 min)</h4>
-                            <p>Con otra pareja: Demuestren su programa y expliquen su experiencia</p>
-                            <p class="highlight-text">Frase guía: "Mi Micro:Bit usó un umbral de 100 para detectar la oscuridad. Me sorprendió que la luz del techo fuera un número tan alto."</p>
-                        </div>
-                        <div class="tps-phase">
-                            <h4>💬 SHARE (2 min)</h4>
-                            <p>Retroalimentación mutua y cierre del maestro.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- ACTIVIDAD 5: ENTREGA DE EVIDENCIAS -->
-            <div class="activity-card" id="activity-5">
-                <div class="activity-header">
-                    <h2>✅ Actividad 5: Entrega de Evidencias</h2>
-                    <div class="activity-timer">
-                        <span class="activity-duration">⏱️ 5:00</span>
-                        <button class="timer-start-btn" data-duration="300">Iniciar</button>
-                    </div>
-                </div>
-                <div class="roles-section">
-                    <div class="role-card role-teacher">
-                        <h4>👨‍🏫 Rol del Maestro</h4>
-                        <ul>
-                            <li>Proyecta diapositiva 5 con las instrucciones.</li>
-                            <li>Guía a los estudiantes para tomar las capturas.</li>
-                            <li>Asegura que todos suban sus evidencias a Gnius Space.</li>
-                            <li>Felicita al grupo por completar la misión.</li>
-                        </ul>
-                    </div>
-                    <div class="role-card role-xolo">
-                        <h4>🤖 Rol de XOLO</h4>
-                        <p class="xolo-status">⭕ XOLO FINALIZADO</p>
-                        <ul>
-                            <li>La interacción con XOLO ha terminado para esta misión.</li>
-                        </ul>
-                    </div>
-                    <div class="role-card role-student">
-                        <h4>👦 Rol del Alumno</h4>
-                        <ul>
-                            <li>Tomar screenshot de su código en MakeCode.</li>
-                            <li>Tomar screenshot de su conversación con XOLO.</li>
-                            <li>Subir ambas evidencias a Gnius Space.</li>
-                            <li>Dar click en "Finalizar Misión".</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="slide-reference">
-                    <h4>📊 Diapositiva 5: ¡Misión Cumplida!</h4>
-                    <div class="slide-content">
-                        <p><strong>📸 Para terminar, sube tus evidencias a Gnius Space:</strong></p>
-                        <ol>
-                            <li>Una captura de pantalla de tu programa final en <strong>MakeCode</strong>.</li>
-                            <li>Una captura de pantalla de tu conversación con <strong>XOLO</strong> donde te dio tu GCS.</li>
-                        </ol>
-                        <p class="highlight-text" style="margin-top: 1rem;">¡No olvides dar click en el botón <strong>"Finalizar Misión"</strong> cuando termines!</p>
-                    </div>
-                </div>
-            </div>
-        </main>
+
+  <header>
+    <div class="brand">
+      <div class="logo-glow">🧠</div>
+      <div class="game-title">
+        <h1>Estudio de Juegos</h1>
+        <span>Misión: Chefs de la IA</span>
+      </div>
     </div>
-    <script src="script.js"></script>
+    <div class="controls">
+      <button class="icon-btn active" id="btn-voice" onclick="toggleVoice()">🗣️ Voz: ON</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. PANTALLA INICIO -->
+    <div id="screen-start" class="screen active">
+      <div class="hero-card fade-in">
+        <h1 class="big-title">Diseñador <span>Inclusivo</span></h1>
+        <p style="font-size: 20px; color: var(--text-muted); line-height: 1.6;">
+          ¡Bienvenido al Estudio! Tu misión es enseñar a la IA a crear videojuegos divertidos para <b>TODOS</b>.
+        </p>
+        <p style="color: var(--warning); margin-top: 10px;">⚠️ Reto: Evita el sesgo y gana 5 estrellas.</p>
+        <button class="start-btn" onclick="startTutorial()">▶ JUGAR AHORA</button>
+      </div>
+    </div>
+
+    <!-- 2. PANTALLA TUTORIAL INTERACTIVO -->
+    <div id="screen-tutorial" class="screen">
+      <div class="tutorial-layout fade-in">
+        <div class="producer-avatar">
+          <span class="avatar-img">👩‍💼</span>
+          <h3 style="margin:0; color: var(--warning)">Productora</h3>
+        </div>
+        
+        <div class="tutorial-content">
+          <!-- El texto cambiará dinámicamente -->
+          <div class="speech-bubble" id="tut-speech">
+            Cargando...
+          </div>
+
+          <div class="interactive-area" id="tut-interaction">
+            <!-- Elementos generados por JS -->
+          </div>
+          
+          <button id="tut-next-btn" class="start-btn" style="font-size: 20px; padding: 15px 30px; display:none; float:right;" onclick="nextTutorialStep()">Continuar ➡</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. PANTALLA DE JUEGO -->
+    <div id="screen-game" class="screen">
+      <div class="game-grid fade-in">
+        
+        <!-- MESA DE DECISIONES -->
+        <div class="main-panel">
+          
+          <!-- Tarjeta 1: Personajes -->
+          <div id="card-1" class="design-card active">
+            <div class="card-header">
+              <span class="card-title">1. ¿Qué héroes tendrá el juego?</span>
+            </div>
+            <div class="options-row">
+              <button class="option-btn" onclick="selectCard(1, 'A')">
+                <div class="opt-icon">👸</div>
+                <div class="opt-text">
+                  <h4>Carpeta A: "Realeza"</h4>
+                  <p>Solo príncipes y princesas rubios.</p>
+                </div>
+              </button>
+              <button class="option-btn" onclick="selectCard(1, 'B')">
+                <div class="opt-icon">🌍</div>
+                <div class="opt-text">
+                  <h4>Carpeta B: "Mundo Diverso"</h4>
+                  <p>Robots, magos, héroes de todo el mundo.</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tarjeta 2: Música -->
+          <div id="card-2" class="design-card">
+            <div class="card-header">
+              <span class="card-title">2. ¿Qué música sonará?</span>
+            </div>
+            <div class="options-row">
+              <button class="option-btn" onclick="selectCard(2, 'A')">
+                <div class="opt-icon">🎸</div>
+                <div class="opt-text">
+                  <h4>Carpeta A: "Solo Rock"</h4>
+                  <p>Guitarra eléctrica muy fuerte.</p>
+                </div>
+              </button>
+              <button class="option-btn" onclick="selectCard(2, 'B')">
+                <div class="opt-icon">🎶</div>
+                <div class="opt-text">
+                  <h4>Carpeta B: "Mix Musical"</h4>
+                  <p>Rock, pop alegre y misterio.</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tarjeta 3: Niveles -->
+          <div id="card-3" class="design-card">
+            <div class="card-header">
+              <span class="card-title">3. ¿Qué harán los jugadores?</span>
+            </div>
+            <div class="options-row">
+              <button class="option-btn" onclick="selectCard(3, 'A')">
+                <div class="opt-icon">⚔️</div>
+                <div class="opt-text">
+                  <h4>Carpeta A: "Pelea Total"</h4>
+                  <p>Solo niveles de combate.</p>
+                </div>
+              </button>
+              <button class="option-btn" onclick="selectCard(3, 'B')">
+                <div class="opt-icon">🧩</div>
+                <div class="opt-text">
+                  <h4>Carpeta B: "Aventura Total"</h4>
+                  <p>Combate, acertijos y exploración.</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- BARRA LATERAL -->
+        <div class="sidebar">
+          <div class="console-box" id="ai-console">
+            <div class="console-line">>> Gen.IA lista.</div>
+            <div class="console-line">>> Esperando datos...</div>
+          </div>
+
+          <div class="testers-box">
+            <h4 style="margin:0; text-align:center; color: var(--accent-action)">REACCIÓN EN VIVO</h4>
+            <div class="tester-item" id="t-war">
+              <span style="font-size:24px">🛡️</span>
+              <div>
+                <b>Guerrero</b>
+                <div class="stars" id="s-war">⭐⭐⭐</div>
+              </div>
+            </div>
+            <div class="tester-item" id="t-mag">
+              <span style="font-size:24px">🪄</span>
+              <div>
+                <b>Mago</b>
+                <div class="stars" id="s-mag">⭐⭐⭐</div>
+              </div>
+            </div>
+            <div class="tester-item" id="t-exp">
+              <span style="font-size:24px">🧭</span>
+              <div>
+                <b>Explorador</b>
+                <div class="stars" id="s-exp">⭐⭐⭐</div>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-launch" class="launch-btn" onclick="finishGame()">🚀 LANZAR JUEGO</button>
+          <button onclick="restartGame()" style="background:transparent; color:#64748b; font-size:14px; margin-top:5px;">↺ Reiniciar mesa</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 4. RESULTADO -->
+    <div id="screen-result" class="screen">
+      <div class="result-container fade-in">
+        <div style="font-size:80px;" id="res-emoji">🏆</div>
+        <h2 id="res-title" style="font-size:36px; color: #fff;">¡Título!</h2>
+        <div class="stars-display" id="res-stars">★★★★★</div>
+        <p id="res-text" style="font-size:20px; line-height:1.5;">Texto</p>
+        <button class="start-btn" onclick="restartGame()">Jugar Otra Vez</button>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast">Mensaje</div>
+
+  </main>
+
+  <script>
+    /* --- AUDIO SYSTEM (No intrusivo) --- */
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let voiceOn = true;
+
+    function playSound(type) {
+      if(ctx.state === 'suspended') ctx.resume();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      const now = ctx.currentTime;
+      if (type === 'click') {
+        osc.frequency.setValueAtTime(400, now);
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+      } else if (type === 'good') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        osc.start(now); osc.stop(now + 0.4);
+      } else if (type === 'bad') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+      } else if (type === 'win') {
+        // Fanfare
+        [523, 659, 784, 1046].forEach((f, i) => {
+           setTimeout(() => {
+             const o = ctx.createOscillator(); const g = ctx.createGain();
+             o.connect(g); g.connect(ctx.destination);
+             o.type='square'; o.frequency.value=f;
+             g.gain.value=0.1; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.5);
+             o.start(); o.stop(ctx.currentTime+0.5);
+           }, i*150);
+        });
+      }
+    }
+
+    function speak(text) {
+      if(!voiceOn) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'es-MX';
+      window.speechSynthesis.speak(u);
+    }
+
+    function toggleVoice() {
+      voiceOn = !voiceOn;
+      document.getElementById('btn-voice').textContent = voiceOn ? "🗣️ Voz: ON" : "🔇 Voz: OFF";
+      document.getElementById('btn-voice').classList.toggle('active');
+    }
+
+    /* --- NAVEGACIÓN --- */
+    function show(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    /* --- TUTORIAL LÓGICA PASO A PASO --- */
+    let tutStep = 0;
+    
+    function startTutorial() {
+      playSound('click');
+      show('screen-tutorial');
+      tutStep = 1;
+      runTutorialStep();
+    }
+
+    function nextTutorialStep() {
+      tutStep++;
+      runTutorialStep();
+    }
+
+    function runTutorialStep() {
+      const bubble = document.getElementById('tut-speech');
+      const area = document.getElementById('tut-interaction');
+      const nextBtn = document.getElementById('tut-next-btn');
+      nextBtn.style.display = 'none'; // Ocultar hasta completar acción
+
+      if (tutStep === 1) {
+        // INTRO
+        bubble.innerHTML = "¡Hola Diseñador! Soy la Productora.<br>Tu trabajo es entrenar a <b>Gen.IA</b> (nuestro cerebro digital) dándole ejemplos para que aprenda.";
+        area.innerHTML = `<div style="font-size:80px;">🧠</div>`;
+        speak("Hola Diseñador. Tu trabajo es entrenar a Genia dándole ejemplos.");
+        setTimeout(() => { nextBtn.style.display = 'block'; }, 2000); // Auto-avanza un poco después
+      } 
+      else if (tutStep === 2) {
+        // EL PROBLEMA
+        bubble.innerHTML = "Vamos a hacer una prueba. <br>Dale esta <b>Carpeta de Espadas</b> a Gen.IA y veamos qué pasa.";
+        // Flecha apuntando
+        area.innerHTML = `
+          <div style="position:relative;">
+            <div class="pointer-hand" style="top:-50px; left:40px;">👇</div>
+            <button class="tut-folder-btn" onclick="tutFailTrigger()">
+              <span style="font-size:30px">🗡️</span>
+              <span>Datos</span>
+            </button>
+          </div>
+          <div style="font-size:30px;">➡</div>
+          <div style="font-size:60px;">🧠</div>
+        `;
+        speak("Dale la carpeta de espadas a Genia y veamos qué pasa.");
+      }
+      else if (tutStep === 3) {
+        // EL RESULTADO (SESGO)
+        bubble.innerHTML = "<b style='color:var(--danger)'>¡ERROR! JUEGO SESGADO.</b><br>Como solo le diste espadas, Gen.IA creó un juego donde <i>todos</i> deben pelear. <br>Al Mago y al Explorador NO les gustó.";
+        area.innerHTML = `
+          <div style="text-align:center;">
+             <div>JUEGO CREADO: "GUERRA TOTAL"</div>
+             <div style="display:flex; gap:15px; font-size:40px; margin-top:10px; justify-content:center;">
+                <span title="Guerrero Feliz">😃</span>
+                <span title="Mago Triste">😟</span>
+                <span title="Explorador Triste">😟</span>
+             </div>
+          </div>
+        `;
+        playSound('bad');
+        speak("¡Error! Juego sesgado. Al mago y al explorador no les gustó porque solo hay peleas.");
+        setTimeout(() => { nextBtn.style.display = 'block'; nextBtn.innerText = "¡Entendido!"; }, 1000);
+      }
+      else if (tutStep === 4) {
+        // FIN TUTORIAL
+        show('screen-game');
+        playSound('click');
+        initGame();
+      }
+    }
+
+    function tutFailTrigger() {
+      nextTutorialStep();
+    }
+
+    /* --- LÓGICA DE JUEGO --- */
+    let decisions = { 1: null, 2: null, 3: null };
+
+    function initGame() {
+      // Reset visual
+      decisions = { 1: null, 2: null, 3: null };
+      document.querySelectorAll('.design-card').forEach(c => {
+        c.classList.remove('active', 'done');
+        c.querySelector('.card-title').classList.remove('done-text');
+      });
+      document.getElementById('card-1').classList.add('active');
+      document.getElementById('btn-launch').classList.remove('ready');
+      document.getElementById('btn-launch').disabled = true;
+      
+      // Reset Stars
+      ['war','mag','exp'].forEach(id => document.getElementById('s-'+id).innerText = '⭐⭐⭐');
+      
+      addConsoleLine(">> Nueva sesión iniciada.");
+      speak("Ahora es tu turno. Selecciona carpetas con VARIEDAD para ganar.");
+    }
+
+    function selectCard(id, option) {
+      playSound('click');
+      decisions[id] = option;
+      
+      const card = document.getElementById('card-'+id);
+      
+      // Feedback Visual en la Opción
+      const btns = card.querySelectorAll('.option-btn');
+      btns.forEach(b => b.className = 'option-btn'); // Limpiar
+      
+      // Lógica de "Variety" (B es buena, A es mala/sesgada)
+      const isGood = (option === 'B');
+      
+      if (isGood) {
+        playSound('good');
+        showToast("✨ ¡Excelente! Agregaste variedad.", "good");
+        addConsoleLine(`>> Paso ${id}: Datos diversos cargados.`);
+        speak("¡Excelente elección! Agregaste variedad.");
+      } else {
+        playSound('bad');
+        showToast("⚠️ Cuidado: Poca variedad detectada.", "bad");
+        addConsoleLine(`>> Paso ${id}: WARNING. Datos limitados.`);
+        speak("Cuidado. Esa carpeta tiene poca variedad.");
+      }
+
+      // Marcar tarjeta como lista
+      card.classList.remove('active');
+      card.classList.add('done');
+      card.querySelector('.card-title').innerText += " (Listo)";
+      card.querySelector('.card-title').classList.add('done-text');
+
+      // Activar siguiente
+      if (id < 3) {
+        document.getElementById('card-'+(id+1)).classList.add('active');
+      } else {
+        // Habilitar botón final
+        const launch = document.getElementById('btn-launch');
+        launch.disabled = false;
+        launch.classList.add('ready');
+        launch.innerText = "🚀 LANZAR JUEGO (Click)";
+        addConsoleLine(">> Compilación lista.");
+        speak("¡Juego listo! Presiona Lanzar.");
+      }
+
+      updateTesters();
+    }
+
+    function updateTesters() {
+      // Cálculo simple de felicidad basado en elecciones acumuladas
+      let score = 0;
+      if (decisions[1] === 'B') score++;
+      if (decisions[2] === 'B') score++;
+      if (decisions[3] === 'B') score++;
+
+      // Animación
+      document.querySelectorAll('.tester-item').forEach(el => {
+        el.classList.remove('bounce');
+        void el.offsetWidth; // trigger reflow
+        el.classList.add('bounce');
+      });
+
+      // Actualizar estrellas visuales (Lógica simplificada para demo)
+      // Guerrero siempre feliz (le gusta todo), otros dependen de score
+      document.getElementById('s-war').innerText = '⭐⭐⭐⭐⭐';
+      
+      // Mago y Explorador suben estrellas según score (0 a 3 opciones buenas)
+      // Score 0: 1 estrella. Score 3: 5 estrellas.
+      let stars = '⭐';
+      if(score >= 1) stars = '⭐⭐';
+      if(score >= 2) stars = '⭐⭐⭐⭐';
+      if(score === 3) stars = '⭐⭐⭐⭐⭐';
+
+      document.getElementById('s-mag').innerText = stars;
+      document.getElementById('s-exp').innerText = stars;
+    }
+
+    function addConsoleLine(text) {
+      const con = document.getElementById('ai-console');
+      con.innerHTML += `<div class="console-line">${text}</div>`;
+      con.scrollTop = con.scrollHeight;
+    }
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = `toast show ${type}`;
+      setTimeout(() => t.className = 'toast', 2500);
+    }
+
+    function finishGame() {
+      let bCount = 0;
+      if (decisions[1] === 'B') bCount++;
+      if (decisions[2] === 'B') bCount++;
+      if (decisions[3] === 'B') bCount++;
+
+      show('screen-result');
+      const title = document.getElementById('res-title');
+      const text = document.getElementById('res-text');
+      const emoji = document.getElementById('res-emoji');
+      const stars = document.getElementById('res-stars');
+
+      if (bCount === 3) {
+        playSound('win');
+        emoji.innerText = "🏆";
+        title.innerText = "¡Obra Maestra Inclusiva!";
+        text.innerText = "¡Increíble! Creaste un juego con avatares diversos, música variada y misiones para todos los gustos. ¡Todos los testers te dan 5 estrellas!";
+        stars.innerText = "★★★★★";
+        speak("¡Increíble! Todos los testers te dan 5 estrellas. Eres un experto en inclusión.");
+      } else if (bCount === 2) {
+        playSound('good');
+        emoji.innerText = "🙂";
+        title.innerText = "Buen Juego";
+        text.innerText = "El juego es divertido, pero un grupo de jugadores se sintió un poco olvidado. ¡Casi lo logras!";
+        stars.innerText = "★★★★☆";
+        speak("Buen juego, pero casi lo logras. Intenta más variedad la próxima vez.");
+      } else {
+        playSound('bad');
+        emoji.innerText = "😟";
+        title.innerText = "Juego Roto por Sesgo";
+        text.innerText = "Usaste carpetas con muy poca variedad. Muchos jugadores se aburrieron o no se sintieron representados.";
+        stars.innerText = "★★☆☆☆";
+        speak("Juego roto. Usaste carpetas con muy poca variedad. Inténtalo de nuevo.");
+      }
+    }
+
+    function restartGame() {
+      playSound('click');
+      show('screen-start');
+    }
+
+  </script>
 </body>
-</html></html>
+</html>
